@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tide Premium — HWID Reset</title>
+<style>
+  :root{
+    --bg-0:#05070f; --bg-1:#0a0f1e; --panel:#0c1322;
+    --line:rgba(90,130,210,.16);
+    --txt:#e8edf8; --txt-dim:#8b96ac; --txt-faint:#5a657b;
+    --accent:#2f7dff; --accent-2:#4cc2ff; --accent-glow:rgba(47,125,255,.55);
+    --green:#39d98a; --red:#ff6b6b;
+    --ease:cubic-bezier(.2,.7,.2,1);
+    --open-ease:cubic-bezier(0.22,1,0.36,1);
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(900px 600px at 50% -10%, rgba(47,125,255,.18), transparent 60%),
+      linear-gradient(160deg, #060a16, var(--bg-0));
+  }
+  @keyframes tide-open{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+
+  .card{
+    position:relative;width:100%;max-width:460px;border-radius:20px;padding:30px 28px 26px;
+    background:linear-gradient(160deg, rgba(40,60,110,.32), rgba(10,16,30,.96)), var(--panel);
+    box-shadow:0 36px 100px rgba(0,0,0,.55), 0 0 60px rgba(47,125,255,.12);
+    overflow:hidden;animation:tide-open .42s var(--open-ease) both;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+    background:linear-gradient(135deg, rgba(76,194,255,.75), rgba(47,125,255,.35) 40%, rgba(156,107,255,.55) 100%);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+  }
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent-glow)}
+  .brand span{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--txt-dim);font-weight:700}
+  h1{font-size:24px;font-weight:800;margin-bottom:6px}
+  .sub{color:var(--txt-dim);font-size:13.5px;line-height:1.5;margin-bottom:22px}
+
+  label{display:block;font-size:12.5px;color:var(--txt-dim);margin-bottom:8px}
+  .key-input{
+    width:100%;font-family:var(--mono);font-size:17px;font-weight:700;letter-spacing:3px;text-align:center;
+    color:var(--txt);background:rgba(6,10,22,.6);border:1px solid var(--line);border-radius:11px;padding:14px;
+    outline:none;transition:border-color .2s var(--ease), box-shadow .2s var(--ease);text-transform:uppercase;
+  }
+  .key-input:focus{border-color:rgba(90,160,255,.55);box-shadow:0 0 18px var(--accent-glow)}
+  .key-input.bad{border-color:rgba(255,107,107,.6);box-shadow:0 0 16px rgba(255,107,107,.35);animation:shake .35s}
+
+  .meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:12.5px;color:var(--txt-dim)}
+  .meta b{color:var(--txt);font-weight:600}
+
+  .btn{
+    width:100%;margin-top:18px;padding:14px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;
+    border:1px solid rgba(90,160,255,.5);color:#04101f;
+    background:linear-gradient(135deg, var(--accent-2), var(--accent));
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:filter .2s var(--ease), opacity .2s var(--ease), transform .1s var(--ease);
+  }
+  .btn:hover:not(:disabled){filter:brightness(1.08)}
+  .btn:active:not(:disabled){transform:scale(.99)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn .spin{width:15px;height:15px;border:2px solid rgba(4,16,31,.35);border-top-color:#04101f;border-radius:50%;animation:spin .7s linear infinite}
+
+  .msg{margin-top:16px;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.45;display:none}
+  .msg.show{display:block}
+  .msg.ok{border:1px solid rgba(57,217,138,.4);background:rgba(57,217,138,.1);color:var(--green)}
+  .msg.err{border:1px solid rgba(255,107,107,.4);background:rgba(255,107,107,.1);color:var(--red)}
+
+  .foot{margin-top:20px;font-size:11.5px;color:var(--txt-faint);line-height:1.5}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand"><span class="dot"></span><span>Tide Premium</span></div>
+    <h1>HWID Reset</h1>
+    <p class="sub">Unbind your license from its current machine. Enter your Tide Premium license key below. You can reset once every 3 hours.</p>
+
+    <label for="key">License key</label>
+    <input id="key" class="key-input" type="text" spellcheck="false" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" />
+
+    <div class="meta" id="meta" style="display:none">
+      <span>Status: <b id="m-bound">—</b></span>
+      <span>Resets used: <b id="m-count">—</b></span>
+    </div>
+
+    <button id="btn" class="btn" disabled>
+      <span id="btn-txt">Reset HWID</span>
+    </button>
+
+    <div id="msg" class="msg"></div>
+
+    <p class="foot">After resetting, just launch Tide on your new computer — it will bind to that machine automatically. Keep your key private; anyone with it can reset your HWID.</p>
+  </div>
+
+<script>
+(function(){
+  // ---- Config (publishable anon key — safe to expose) ----
+  var SUPA_URL = 'https://cjqzuvvzkmkoxqjkagfd.supabase.co';
+  var ANON = 'sb_publishable_pnC8S6dz-G3I7OYrC2rD9g_VOgkY_5p';
+
+  var input = document.getElementById('key');
+  var btn = document.getElementById('btn');
+  var btnTxt = document.getElementById('btn-txt');
+  var msg = document.getElementById('msg');
+  var meta = document.getElementById('meta');
+  var mBound = document.getElementById('m-bound');
+  var mCount = document.getElementById('m-count');
+
+  var loading = false, cooldown = false, nextAllowed = 0, timer = null, statusTimer = null;
+
+  function clean(v){ return (v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,16); }
+  function fmt(v){ return (clean(v).match(/.{1,4}/g)||[]).join('-'); }
+  function setMsg(text,type){ msg.textContent=text||''; msg.className='msg'+(text?(' show '+type):''); }
+
+  function rpc(fn, body){
+    return fetch(SUPA_URL+'/rest/v1/rpc/'+fn, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':ANON,'Authorization':'Bearer '+ANON},
+      body:JSON.stringify(body)
+    }).then(function(r){ return r.json().then(function(d){return {status:r.status,data:d};}).catch(function(){return {status:r.status,data:null};}); });
+  }
+
+  function render(){
+    var len = clean(input.value).length;
+    if(loading){ btn.disabled=true; btnTxt.innerHTML='<span class="spin"></span> Working…'; return; }
+    if(cooldown){ btn.disabled=true; return; }
+    btn.disabled = (len !== 16);
+    btnTxt.textContent = 'Reset HWID';
+  }
+
+  function startCooldown(nextAllowedAt){
+    if(!nextAllowedAt) return;
+    nextAllowed = new Date(nextAllowedAt).getTime();
+    cooldown = true;
+    tick();
+    clearInterval(timer);
+    timer = setInterval(tick, 1000);
+  }
+  function stopCooldown(){ cooldown=false; clearInterval(timer); render(); }
+  function tick(){
+    var ms = nextAllowed - Date.now();
+    if(ms<=0){ stopCooldown(); return; }
+    var h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/60000), s=Math.floor(ms%60000/1000);
+    btn.disabled=true;
+    btnTxt.textContent = 'Available in ' + (h>0?h+'h ':'') + m+'m '+s+'s';
+  }
+
+  function checkStatus(){
+    rpc('tide_key_status', {p_key: input.value}).then(function(res){
+      var d = res.data;
+      if(d && d.found){
+        meta.style.display='flex';
+        mBound.textContent = d.bound ? 'Locked to a machine' : 'Not bound';
+        mCount.textContent = d.reset_count;
+        if(d.on_cooldown && d.next_allowed_at) startCooldown(d.next_allowed_at);
+        else stopCooldown();
+      } else {
+        meta.style.display='none';
+        stopCooldown();
+      }
+    }).catch(function(){ meta.style.display='none'; });
+  }
+
+  input.addEventListener('input', function(){
+    input.value = fmt(input.value);
+    input.classList.remove('bad');
+    setMsg('','');
+    meta.style.display='none';
+    clearTimeout(statusTimer);
+    if(clean(input.value).length===16){ statusTimer=setTimeout(checkStatus,250); }
+    render();
+  });
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter' && !btn.disabled) doReset(); });
+
+  function doReset(){
+    if(clean(input.value).length!==16){ input.classList.add('bad'); setMsg('Enter your full 16-character license key.','err'); return; }
+    loading=true; setMsg('',''); render();
+    rpc('tide_reset_hwid', {p_key: input.value}).then(function(res){
+      loading=false;
+      var d = res.data;
+      if(d && d.ok){
+        setMsg(d.reason || 'HWID reset successfully.', 'ok');
+        if(d.next_allowed_at) startCooldown(d.next_allowed_at);
+        checkStatus();
+      } else {
+        setMsg((d && d.reason) || ('Server error ('+res.status+').'), 'err');
+        if(d && d.next_allowed_at) startCooldown(d.next_allowed_at);
+        else render();
+      }
+    }).catch(function(){ loading=false; setMsg('Network error. Please try again.','err'); render(); });
+  }
+
+  btn.addEventListener('click', doReset);
+  render();
+})();
+</script>
+</body>
+</html>
